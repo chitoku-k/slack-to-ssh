@@ -47,6 +47,7 @@ func (sir *slackInteractionResponder) Execute(response service.SlackInteractionR
 			attachment.Text = action.AttachmentText
 		}
 		if response.Body != nil {
+			attachment.MarkdownIn = []string{"fields"}
 			attachment.Fields = append(attachment.Fields, slack.AttachmentField{
 				Value: fmt.Sprintf("```\n%s\n```", response.Body),
 			})

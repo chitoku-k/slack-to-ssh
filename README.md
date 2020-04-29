@@ -35,7 +35,7 @@ export SLACK_APP_SECRET=
 # nth Action Name (required)
 export SLACK_ACTION_0_NAME=
 
-# nth Attachment Text (required)
+# nth Attachment Text (optional)
 export SLACK_ACTION_0_ATTACHMENT_TEXT=
 
 # nth SSH Command to execute (required)

@@ -59,14 +59,19 @@ func Get() (Environment, error) {
 
 		action := service.SlackAction{Name: name}
 		for k, v := range map[string]*string{
-			fmt.Sprintf("SLACK_ACTION_%d_COMMAND", i):         &action.Command,
-			fmt.Sprintf("SLACK_ACTION_%d_ATTACHMENT_TEXT", i): &action.AttachmentText,
+			fmt.Sprintf("SLACK_ACTION_%d_COMMAND", i): &action.Command,
 		} {
 			*v = os.Getenv(k)
 
 			if *v == "" {
 				missing = append(missing, k)
 			}
+		}
+
+		for k, v := range map[string]*string{
+			fmt.Sprintf("SLACK_ACTION_%d_ATTACHMENT_TEXT", i): &action.AttachmentText,
+		} {
+			*v = os.Getenv(k)
 		}
 
 		env.SlackActions = append(env.SlackActions, action)
