@@ -5,7 +5,6 @@ import (
 
 	"github.com/chitoku-k/slack-to-ssh/infrastructure/config"
 	"github.com/chitoku-k/slack-to-ssh/service"
-	"github.com/pkg/errors"
 	"github.com/slack-go/slack"
 )
 
@@ -31,7 +30,7 @@ func (sir *slackInteractionResponder) Execute(response service.SlackInteractionR
 	}
 
 	if action == nil {
-		return errors.New("failed to find suitable action: " + response.ActionName)
+		return fmt.Errorf("failed to find suitable action: %s", response.ActionName)
 	}
 
 	options := []slack.MsgOption{
@@ -61,5 +60,8 @@ func (sir *slackInteractionResponder) Execute(response service.SlackInteractionR
 		response.Message.Channel,
 		options...,
 	)
-	return errors.Wrap(err, "failed to send response")
+	if err != nil {
+		return fmt.Errorf("failed to send response: %w", err)
+	}
+	return nil
 }

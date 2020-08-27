@@ -2,13 +2,13 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
 	"github.com/slack-go/slack"
 )
 
@@ -16,7 +16,7 @@ func (e *engine) HandleSlackEvent(c *gin.Context) {
 	verifier, err := slack.NewSecretsVerifier(c.Request.Header, e.Environment.SlackAppSecret)
 	if err != nil {
 		c.Status(http.StatusUnauthorized)
-		c.Error(errors.Wrap(err, "failed to verify secret"))
+		c.Error(fmt.Errorf("failed to verify secret: %w", err))
 		return
 	}
 
@@ -26,14 +26,14 @@ func (e *engine) HandleSlackEvent(c *gin.Context) {
 	err = verifier.Ensure()
 	if err != nil {
 		c.Status(http.StatusUnauthorized)
-		c.Error(errors.Wrap(err, "failed to validate request"))
+		c.Error(fmt.Errorf("failed to validate request: %w", err))
 		return
 	}
 
 	values, err := url.ParseQuery(builder.String())
 	if err != nil {
 		c.Status(http.StatusBadRequest)
-		c.Error(errors.Wrap(err, "failed to parse request body"))
+		c.Error(fmt.Errorf("failed to parse request body: %w", err))
 		return
 	}
 
@@ -41,7 +41,7 @@ func (e *engine) HandleSlackEvent(c *gin.Context) {
 	err = json.Unmarshal([]byte(values.Get("payload")), &interaction)
 	if err != nil {
 		c.Status(http.StatusBadRequest)
-		c.Error(errors.Wrap(err, "failed to parse interaction"))
+		c.Error(fmt.Errorf("failed to parse interaction: %w", err))
 		return
 	}
 
@@ -50,22 +50,22 @@ func (e *engine) HandleSlackEvent(c *gin.Context) {
 			result, err := e.ActionService.Execute(action.Value)
 			if err != nil {
 				if result != nil {
-					c.Error(errors.Wrap(err, "failed to execute command"))
+					c.Error(fmt.Errorf("failed to execute command: %w", err))
 
 					err = e.InteractionService.Fail(*action, interaction, result, err)
 					if err != nil {
-						c.Error(errors.Wrap(err, "failed to respond to interaction"))
+						c.Error(fmt.Errorf("failed to respond to interaction: %w", err))
 					}
 					return
 				}
 
-				c.Error(errors.Wrap(err, "failed to execute action"))
+				c.Error(fmt.Errorf("failed to execute action: %w", err))
 				return
 			}
 
 			err = e.InteractionService.Respond(*action, interaction)
 			if err != nil {
-				c.Error(errors.Wrap(err, "failed to respond to interaction"))
+				c.Error(fmt.Errorf("failed to respond to interaction: %w", err))
 			}
 		}
 	}()
