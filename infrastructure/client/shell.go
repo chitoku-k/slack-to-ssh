@@ -1,9 +1,10 @@
 package client
 
 import (
+	"fmt"
+
 	"github.com/chitoku-k/slack-to-ssh/infrastructure/config"
 	"github.com/chitoku-k/slack-to-ssh/service"
-	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -38,7 +39,7 @@ func (sae *shellActionExecutor) Do(name string) ([]byte, error) {
 	}
 
 	if action == nil {
-		return nil, errors.New("cannot find requested action: " + name)
+		return nil, fmt.Errorf("cannot find requested action: %s", name)
 	}
 
 	client, err := ssh.Dial(
@@ -47,15 +48,19 @@ func (sae *shellActionExecutor) Do(name string) ([]byte, error) {
 		&sae.ClientConfig,
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to connect to remote server")
+		return nil, fmt.Errorf("failed to connect to remote server: %w", err)
 	}
 	defer client.Close()
 
 	session, err := client.NewSession()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to establish a remote session")
+		return nil, fmt.Errorf("failed to establish a remote session: %w", err)
 	}
 	defer session.Close()
 
-	return session.CombinedOutput(action.Command)
+	output, err := session.CombinedOutput(action.Command)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get output of the command: %w", err)
+	}
+	return output, nil
 }
