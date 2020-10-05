@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,8 +13,8 @@ import (
 	"github.com/slack-go/slack"
 )
 
-func (e *engine) HandleSlackEvent(c *gin.Context) {
-	verifier, err := slack.NewSecretsVerifier(c.Request.Header, e.Environment.SlackAppSecret)
+func (e *engine) HandleSlackEvent(ctx context.Context, c *gin.Context) {
+	verifier, err := slack.NewSecretsVerifier(c.Request.Header, e.SlackAppSecret)
 	if err != nil {
 		c.Status(http.StatusUnauthorized)
 		c.Error(fmt.Errorf("failed to verify secret: %w", err))
@@ -47,12 +48,12 @@ func (e *engine) HandleSlackEvent(c *gin.Context) {
 
 	go func() {
 		for _, action := range interaction.ActionCallback.AttachmentActions {
-			result, err := e.ActionService.Execute(action.Value)
+			result, err := e.ActionService.Execute(ctx, action.Value)
 			if err != nil {
 				if result != nil {
 					c.Error(fmt.Errorf("failed to execute command: %w", err))
 
-					err = e.InteractionService.Fail(*action, interaction, result, err)
+					err = e.InteractionService.Fail(ctx, *action, interaction, result, err)
 					if err != nil {
 						c.Error(fmt.Errorf("failed to respond to interaction: %w", err))
 					}
@@ -63,7 +64,7 @@ func (e *engine) HandleSlackEvent(c *gin.Context) {
 				return
 			}
 
-			err = e.InteractionService.Respond(*action, interaction)
+			err = e.InteractionService.Respond(ctx, *action, interaction)
 			if err != nil {
 				c.Error(fmt.Errorf("failed to respond to interaction: %w", err))
 			}
