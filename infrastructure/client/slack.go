@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/chitoku-k/slack-to-ssh/infrastructure/config"
@@ -20,7 +21,7 @@ func NewSlackInteractionResponder(environment config.Environment) service.Intera
 	}
 }
 
-func (sir *slackInteractionResponder) Execute(response service.SlackInteractionResponse) error {
+func (sir *slackInteractionResponder) Execute(ctx context.Context, response service.SlackInteractionResponse) error {
 	var action *service.SlackAction
 	for _, v := range sir.Environment.SlackActions {
 		if v.Name == response.ActionName {
@@ -56,7 +57,8 @@ func (sir *slackInteractionResponder) Execute(response service.SlackInteractionR
 		options = append(options, slack.MsgOptionAttachments(attachment))
 	}
 
-	_, _, _, err := sir.Client.SendMessage(
+	_, _, _, err := sir.Client.SendMessageContext(
+		ctx,
 		response.Message.Channel,
 		options...,
 	)

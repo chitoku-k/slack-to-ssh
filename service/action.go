@@ -1,15 +1,19 @@
 package service
 
+import (
+	"context"
+)
+
 type actionService struct {
 	Executor ActionExecutor
 }
 
 type ActionService interface {
-	Execute(name string) ([]byte, error)
+	Execute(ctx context.Context, name string) ([]byte, error)
 }
 
 type ActionExecutor interface {
-	Do(name string) ([]byte, error)
+	Do(ctx context.Context, name string) ([]byte, error)
 }
 
 func NewActionService(executor ActionExecutor) ActionService {
@@ -18,6 +22,6 @@ func NewActionService(executor ActionExecutor) ActionService {
 	}
 }
 
-func (as *actionService) Execute(name string) ([]byte, error) {
-	return as.Executor.Do(name)
+func (as *actionService) Execute(ctx context.Context, name string) ([]byte, error) {
+	return as.Executor.Do(ctx, name)
 }

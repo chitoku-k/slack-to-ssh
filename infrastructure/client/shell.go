@@ -1,7 +1,9 @@
 package client
 
 import (
+	"context"
 	"fmt"
+	"net"
 
 	"github.com/chitoku-k/slack-to-ssh/infrastructure/config"
 	"github.com/chitoku-k/slack-to-ssh/service"
@@ -29,7 +31,7 @@ func NewShellActionExecutor(environment config.Environment) (service.ActionExecu
 	}, nil
 }
 
-func (sae *shellActionExecutor) Do(name string) ([]byte, error) {
+func (sae *shellActionExecutor) Do(ctx context.Context, name string) ([]byte, error) {
 	var action *service.SlackAction
 	for _, v := range sae.Environment.SlackActions {
 		if v.Name == name {
@@ -42,14 +44,19 @@ func (sae *shellActionExecutor) Do(name string) ([]byte, error) {
 		return nil, fmt.Errorf("cannot find requested action: %s", name)
 	}
 
-	client, err := ssh.Dial(
-		"tcp",
-		sae.Environment.SSH.HostName+":"+sae.Environment.SSH.Port,
-		&sae.ClientConfig,
-	)
+	var d net.Dialer
+	addr := net.JoinHostPort(sae.Environment.SSH.HostName, sae.Environment.SSH.Port)
+	conn, err := d.DialContext(ctx, "tcp", addr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to remote server: %w", err)
 	}
+
+	c, chans, reqs, err := ssh.NewClientConn(conn, addr, &sae.ClientConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to establish an SSH connection: %w", err)
+	}
+
+	client := ssh.NewClient(c, chans, reqs)
 	defer client.Close()
 
 	session, err := client.NewSession()

@@ -1,6 +1,8 @@
 package service
 
 import (
+	"context"
+
 	"github.com/slack-go/slack"
 )
 
@@ -9,12 +11,12 @@ type interactionService struct {
 }
 
 type InteractionService interface {
-	Respond(action slack.AttachmentAction, interaction slack.InteractionCallback) error
-	Fail(action slack.AttachmentAction, interaction slack.InteractionCallback, body []byte, err error) error
+	Respond(ctx context.Context, action slack.AttachmentAction, interaction slack.InteractionCallback) error
+	Fail(ctx context.Context, action slack.AttachmentAction, interaction slack.InteractionCallback, body []byte, err error) error
 }
 
 type InteractionResponder interface {
-	Execute(response SlackInteractionResponse) error
+	Execute(ctx context.Context, response SlackInteractionResponse) error
 }
 
 func NewInteractionService(responder InteractionResponder) InteractionService {
@@ -23,16 +25,16 @@ func NewInteractionService(responder InteractionResponder) InteractionService {
 	}
 }
 
-func (is *interactionService) Respond(action slack.AttachmentAction, interaction slack.InteractionCallback) error {
-	return is.InteractionResponder.Execute(SlackInteractionResponse{
+func (is *interactionService) Respond(ctx context.Context, action slack.AttachmentAction, interaction slack.InteractionCallback) error {
+	return is.InteractionResponder.Execute(ctx, SlackInteractionResponse{
 		ActionName:  action.Value,
 		ResponseURL: interaction.ResponseURL,
 		Message:     interaction.OriginalMessage,
 	})
 }
 
-func (is *interactionService) Fail(action slack.AttachmentAction, interaction slack.InteractionCallback, body []byte, err error) error {
-	return is.InteractionResponder.Execute(SlackInteractionResponse{
+func (is *interactionService) Fail(ctx context.Context, action slack.AttachmentAction, interaction slack.InteractionCallback, body []byte, err error) error {
+	return is.InteractionResponder.Execute(ctx, SlackInteractionResponse{
 		ActionName:  action.Value,
 		ResponseURL: interaction.ResponseURL,
 		Message:     interaction.OriginalMessage,
