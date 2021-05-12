@@ -13,7 +13,7 @@ Runs an SSH command from Slack interactive message buttons.
 ## Installation
 
 ```sh
-$ go build
+$ docker buildx build .
 ```
 
 ```sh
