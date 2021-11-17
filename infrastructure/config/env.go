@@ -26,12 +26,13 @@ type SSH struct {
 	HostName   string
 	Port       string
 	Username   string
-	PrivateKey string
+	PrivateKey []byte
 }
 
 func Get() (Environment, error) {
 	var missing []string
 	var env Environment
+	var sshPrivateKeyPath string
 
 	for k, v := range map[string]*string{
 		"SSH_PORT": &env.SSH.Port,
@@ -42,11 +43,11 @@ func Get() (Environment, error) {
 	}
 
 	for k, v := range map[string]*string{
-		"SSH_HOSTNAME":     &env.SSH.HostName,
-		"SSH_USERNAME":     &env.SSH.Username,
-		"SSH_PRIVATE_KEY":  &env.SSH.PrivateKey,
-		"SLACK_APP_SECRET": &env.SlackAppSecret,
-		"PORT":             &env.Port,
+		"SSH_HOSTNAME":         &env.SSH.HostName,
+		"SSH_USERNAME":         &env.SSH.Username,
+		"SSH_PRIVATE_KEY_FILE": &sshPrivateKeyPath,
+		"SLACK_APP_SECRET":     &env.SlackAppSecret,
+		"PORT":                 &env.Port,
 	} {
 		*v = os.Getenv(k)
 
@@ -87,6 +88,12 @@ func Get() (Environment, error) {
 
 	if len(env.SlackActions) == 0 {
 		return env, errors.New("missing actions: at least 1 action is required")
+	}
+
+	var err error
+	env.SSH.PrivateKey, err = os.ReadFile(sshPrivateKeyPath)
+	if err != nil {
+		return env, fmt.Errorf("failed to read private key %q: %w", sshPrivateKeyPath, err)
 	}
 
 	if env.SSH.Port == "" {
