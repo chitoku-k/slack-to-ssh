@@ -16,7 +16,7 @@ type shellActionExecutor struct {
 }
 
 func NewShellActionExecutor(environment config.Environment) (service.ActionExecutor, error) {
-	signer, err := ssh.ParsePrivateKey([]byte(environment.SSH.PrivateKey))
+	signer, err := ssh.ParsePrivateKey(environment.SSH.PrivateKey)
 	if err != nil {
 		return nil, err
 	}

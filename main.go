@@ -30,7 +30,7 @@ func main() {
 	responder := client.NewSlackInteractionResponder(env)
 	interaction := service.NewInteractionService(responder)
 
-	engine := server.NewEngine(env.Port, env.SlackAppSecret, action, interaction)
+	engine := server.NewEngine(env.Port, env.TLSCert, env.TLSKey, env.SlackAppSecret, action, interaction)
 	err = engine.Start(ctx)
 	if err != nil {
 		logrus.Fatalf("Failed to start web server: %v", err)

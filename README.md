@@ -27,7 +27,7 @@ export SSH_PORT=
 export SSH_USERNAME=
 
 # SSH Private Key (required)
-export SSH_PRIVATE_KEY=
+export SSH_PRIVATE_KEY_FILE=/path/to/private/key
 
 # Slack App Secret (required)
 export SLACK_APP_SECRET=
@@ -84,11 +84,7 @@ export SLACK_ACTION_0_COMMAND=
 ```sh
 export SSH_HOSTNAME=example.com
 export SSH_USERNAME=user
-export SSH_PRIVATE_KEY='
------BEGIN OPENSSH PRIVATE KEY-----
-...................................
------END OPENSSH PRIVATE KEY-----
-'
+export SSH_PRIVATE_KEY_FILE=/path/to/private/key
 export SLACK_APP_SECRET=00000000000000000000000000000000
 export SLACK_ACTION_0_NAME=beef
 export SLACK_ACTION_0_ATTACHMENT_TEXT='Beef is chosen for dinner'
