@@ -17,6 +17,13 @@ $ docker buildx build .
 ```
 
 ```sh
+# Port number (required)
+export PORT=8080
+
+# TLS certificate and private key (optional; if not specified, application is served over HTTP)
+export TLS_CERT=/path/to/tls/cert
+export TLS_KEY=/path/to/tls/key
+
 # SSH Hostname (required)
 export SSH_HOSTNAME=
 
