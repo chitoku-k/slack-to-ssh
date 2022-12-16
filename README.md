@@ -104,4 +104,4 @@ export SLACK_ACTION_1_COMMAND='echo Hello, turkey | cowsay -f turkey'
 3. The specified command is executed on the remote server.
 
 [workflow-link]:    https://github.com/chitoku-k/slack-to-ssh/actions?query=branch:master
-[workflow-badge]:   https://img.shields.io/github/workflow/status/chitoku-k/slack-to-ssh/CI%20Workflow/master.svg?style=flat-square
+[workflow-badge]:   https://img.shields.io/github/actions/workflow/status/chitoku-k/slack-to-ssh/ci.yml?branch=master&style=flat-square
