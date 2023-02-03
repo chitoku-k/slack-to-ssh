@@ -33,6 +33,9 @@ export SSH_PORT=
 # SSH Username (required)
 export SSH_USERNAME=
 
+# SSH Known Hosts (optional; recommended)
+export SSH_KNOWN_HOSTS_FILE=/path/to/known_hosts
+
 # SSH Private Key (required)
 export SSH_PRIVATE_KEY_FILE=/path/to/private/key
 
@@ -91,6 +94,7 @@ export SLACK_ACTION_0_COMMAND=
 ```sh
 export SSH_HOSTNAME=example.com
 export SSH_USERNAME=user
+export SSH_KNOWN_HOSTS_FILE=/path/to/known_hosts
 export SSH_PRIVATE_KEY_FILE=/path/to/private/key
 export SLACK_APP_SECRET=00000000000000000000000000000000
 export SLACK_ACTION_0_NAME=beef

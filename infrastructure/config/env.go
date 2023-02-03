@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/chitoku-k/slack-to-ssh/service"
+	"github.com/sirupsen/logrus"
 )
 
 const DefaultSSHPort = "22"
@@ -26,18 +27,22 @@ type SSH struct {
 	HostName   string
 	Port       string
 	Username   string
+	KnownHosts []byte
 	PrivateKey []byte
 }
 
 func Get() (Environment, error) {
 	var missing []string
 	var env Environment
+
+	var sshKnownHostsPath string
 	var sshPrivateKeyPath string
 
 	for k, v := range map[string]*string{
-		"SSH_PORT": &env.SSH.Port,
-		"TLS_CERT": &env.TLSCert,
-		"TLS_KEY":  &env.TLSKey,
+		"SSH_PORT":             &env.SSH.Port,
+		"SSH_KNOWN_HOSTS_FILE": &sshKnownHostsPath,
+		"TLS_CERT":             &env.TLSCert,
+		"TLS_KEY":              &env.TLSKey,
 	} {
 		*v = os.Getenv(k)
 	}
@@ -91,6 +96,15 @@ func Get() (Environment, error) {
 	}
 
 	var err error
+	if sshKnownHostsPath != "" {
+		env.SSH.KnownHosts, err = os.ReadFile(sshKnownHostsPath)
+		if err != nil {
+			return env, fmt.Errorf("failed to read known hosts %q: %w", sshKnownHostsPath, err)
+		}
+	} else {
+		logrus.Warnln("SSH host key verification is disabled. Consider configuring SSH_KNOWN_HOSTS_FILE.")
+	}
+
 	env.SSH.PrivateKey, err = os.ReadFile(sshPrivateKeyPath)
 	if err != nil {
 		return env, fmt.Errorf("failed to read private key %q: %w", sshPrivateKeyPath, err)

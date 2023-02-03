@@ -4,26 +4,25 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/chitoku-k/slack-to-ssh/infrastructure/config"
 	"github.com/chitoku-k/slack-to-ssh/service"
 	"github.com/slack-go/slack"
 )
 
 type slackInteractionResponder struct {
-	Environment config.Environment
-	Client      *slack.Client
+	Actions []service.SlackAction
+	Client  *slack.Client
 }
 
-func NewSlackInteractionResponder(environment config.Environment) service.InteractionResponder {
+func NewSlackInteractionResponder(actions []service.SlackAction) service.InteractionResponder {
 	return &slackInteractionResponder{
-		Environment: environment,
-		Client:      slack.New(""),
+		Actions: actions,
+		Client:  slack.New(""),
 	}
 }
 
 func (sir *slackInteractionResponder) Execute(ctx context.Context, response service.SlackInteractionResponse) error {
 	var action *service.SlackAction
-	for _, v := range sir.Environment.SlackActions {
+	for _, v := range sir.Actions {
 		if v.Name == response.ActionName {
 			action = &v
 			break
