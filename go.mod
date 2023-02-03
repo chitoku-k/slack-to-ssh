@@ -1,6 +1,6 @@
 module github.com/chitoku-k/slack-to-ssh
 
-go 1.19
+go 1.20
 
 require (
 	github.com/gin-gonic/gin v1.8.2
