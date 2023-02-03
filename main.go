@@ -21,13 +21,13 @@ func main() {
 		logrus.Fatalf("Failed to initialize config: %v", err)
 	}
 
-	shellActionExecutor, err := client.NewShellActionExecutor(env)
+	shellActionExecutor, err := client.NewShellActionExecutor(env.SlackActions, env.SSH.HostName, env.SSH.Port, env.SSH.Username, env.SSH.KnownHosts, env.SSH.PrivateKey)
 	if err != nil {
 		logrus.Fatalf("Failed to initialize ssh config: %v", err)
 	}
 
 	action := service.NewActionService(shellActionExecutor)
-	responder := client.NewSlackInteractionResponder(env)
+	responder := client.NewSlackInteractionResponder(env.SlackActions)
 	interaction := service.NewInteractionService(responder)
 
 	engine := server.NewEngine(env.Port, env.TLSCert, env.TLSKey, env.SlackAppSecret, action, interaction)
