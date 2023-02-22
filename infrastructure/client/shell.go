@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"net"
 
 	"github.com/chitoku-k/slack-to-ssh/service"
@@ -19,30 +18,6 @@ type shellActionExecutor struct {
 	ClientConfig ssh.ClientConfig
 }
 
-func parseKnownHosts(knownHosts []byte, hostname string) (publicKey ssh.PublicKey, rest []byte, err error) {
-	var marker string
-	var hosts []string
-	marker, hosts, publicKey, _, rest, err = ssh.ParseKnownHosts(knownHosts)
-	if err == io.EOF {
-		err = nil
-		return
-	}
-	if err != nil {
-		return
-	}
-	if marker == "revoked" {
-		publicKey = nil
-		return
-	}
-	for _, h := range hosts {
-		if h == hostname {
-			return
-		}
-	}
-	publicKey = nil
-	return
-}
-
 func verifyHostKey(publicKeys []ssh.PublicKey) ssh.HostKeyCallback {
 	return func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 		for _, knownHostKey := range publicKeys {
@@ -54,28 +29,12 @@ func verifyHostKey(publicKeys []ssh.PublicKey) ssh.HostKeyCallback {
 	}
 }
 
-func NewShellActionExecutor(actions []service.SlackAction, hostname, port, username string, knownHosts, privateKey []byte) (service.ActionExecutor, error) {
+func NewShellActionExecutor(actions []service.SlackAction, hostname, port, username string, knownHosts []ssh.PublicKey, privateKey ssh.Signer) (service.ActionExecutor, error) {
 	var hostKeyCallback ssh.HostKeyCallback
 	if knownHosts == nil {
 		hostKeyCallback = ssh.InsecureIgnoreHostKey()
 	} else {
-		var publicKeys []ssh.PublicKey
-		for knownHosts != nil {
-			publicKey, rest, err := parseKnownHosts(knownHosts, hostname)
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse known hosts: %w", err)
-			}
-			if publicKey != nil {
-				publicKeys = append(publicKeys, publicKey)
-			}
-			knownHosts = rest
-		}
-		hostKeyCallback = verifyHostKey(publicKeys)
-	}
-
-	signer, err := ssh.ParsePrivateKey(privateKey)
-	if err != nil {
-		return nil, err
+		hostKeyCallback = verifyHostKey(knownHosts)
 	}
 
 	return &shellActionExecutor{
@@ -84,7 +43,7 @@ func NewShellActionExecutor(actions []service.SlackAction, hostname, port, usern
 		Port:     port,
 		ClientConfig: ssh.ClientConfig{
 			User:            username,
-			Auth:            []ssh.AuthMethod{ssh.PublicKeys(signer)},
+			Auth:            []ssh.AuthMethod{ssh.PublicKeys(privateKey)},
 			HostKeyCallback: hostKeyCallback,
 		},
 	}, nil

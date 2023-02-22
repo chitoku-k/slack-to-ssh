@@ -3,11 +3,13 @@ package config
 import (
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
 	"github.com/chitoku-k/slack-to-ssh/service"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/crypto/ssh"
 )
 
 const DefaultSSHPort = "22"
@@ -27,8 +29,8 @@ type SSH struct {
 	HostName   string
 	Port       string
 	Username   string
-	KnownHosts []byte
-	PrivateKey []byte
+	KnownHosts []ssh.PublicKey
+	PrivateKey ssh.Signer
 }
 
 func Get() (Environment, error) {
@@ -36,13 +38,14 @@ func Get() (Environment, error) {
 	var env Environment
 
 	var sshKnownHostsPath string
-	var sshPrivateKeyPath string
+	var sshPrivateKeyPath, sshPrivateKeyPassphrasePath string
 
 	for k, v := range map[string]*string{
-		"SSH_PORT":             &env.SSH.Port,
-		"SSH_KNOWN_HOSTS_FILE": &sshKnownHostsPath,
-		"TLS_CERT":             &env.TLSCert,
-		"TLS_KEY":              &env.TLSKey,
+		"SSH_PORT":                        &env.SSH.Port,
+		"SSH_KNOWN_HOSTS_FILE":            &sshKnownHostsPath,
+		"SSH_PRIVATE_KEY_PASSPHRASE_FILE": &sshPrivateKeyPassphrasePath,
+		"TLS_CERT":                        &env.TLSCert,
+		"TLS_KEY":                         &env.TLSKey,
 	} {
 		*v = os.Getenv(k)
 	}
@@ -95,19 +98,43 @@ func Get() (Environment, error) {
 		return env, errors.New("missing actions: at least 1 action is required")
 	}
 
-	var err error
 	if sshKnownHostsPath != "" {
-		env.SSH.KnownHosts, err = os.ReadFile(sshKnownHostsPath)
+		knownHosts, err := os.ReadFile(sshKnownHostsPath)
 		if err != nil {
 			return env, fmt.Errorf("failed to read known hosts %q: %w", sshKnownHostsPath, err)
+		}
+
+		for knownHosts != nil {
+			publicKey, rest, err := parseSSHKnownHosts(knownHosts, env.SSH.HostName)
+			if err != nil {
+				return env, fmt.Errorf("failed to parse known hosts: %w", err)
+			}
+			if publicKey != nil {
+				env.SSH.KnownHosts = append(env.SSH.KnownHosts, publicKey)
+			}
+			knownHosts = rest
 		}
 	} else {
 		logrus.Warnln("SSH host key verification is disabled. Consider configuring SSH_KNOWN_HOSTS_FILE.")
 	}
 
-	env.SSH.PrivateKey, err = os.ReadFile(sshPrivateKeyPath)
+	sshPrivateKey, err := os.ReadFile(sshPrivateKeyPath)
 	if err != nil {
 		return env, fmt.Errorf("failed to read private key %q: %w", sshPrivateKeyPath, err)
+	}
+
+	if sshPrivateKeyPassphrasePath != "" {
+		sshPrivateKeyPassphrase, err := os.ReadFile(sshPrivateKeyPassphrasePath)
+		if err != nil {
+			return env, fmt.Errorf("failed to read passphrase %q: %w", sshPrivateKeyPassphrasePath, err)
+		}
+		env.SSH.PrivateKey, err = ssh.ParsePrivateKeyWithPassphrase(sshPrivateKey, sshPrivateKeyPassphrase)
+	} else {
+		env.SSH.PrivateKey, err = ssh.ParsePrivateKey(sshPrivateKey)
+	}
+
+	if err != nil {
+		return env, fmt.Errorf("faile to parse private key %q: %w", sshPrivateKeyPath, err)
 	}
 
 	if env.SSH.Port == "" {
@@ -115,4 +142,23 @@ func Get() (Environment, error) {
 	}
 
 	return env, nil
+}
+
+func parseSSHKnownHosts(knownHosts []byte, hostname string) (publicKey ssh.PublicKey, rest []byte, err error) {
+	marker, hosts, publicKey, _, rest, err := ssh.ParseKnownHosts(knownHosts)
+	if err == io.EOF {
+		return nil, nil, nil
+	}
+	if err != nil {
+		return nil, rest, err
+	}
+	if marker == "revoked" {
+		return nil, rest, err
+	}
+	for _, h := range hosts {
+		if h == hostname {
+			return publicKey, rest, err
+		}
+	}
+	return nil, rest, err
 }
