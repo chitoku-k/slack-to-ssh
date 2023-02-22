@@ -39,6 +39,9 @@ export SSH_KNOWN_HOSTS_FILE=/path/to/known_hosts
 # SSH Private Key (required)
 export SSH_PRIVATE_KEY_FILE=/path/to/private/key
 
+# SSH Private Key Passphrase (required if private key is encrypted)
+export SSH_PRIVATE_KEY_PASSPHRASE_FILE=/path/to/passphrase
+
 # Slack App Secret (required)
 export SLACK_APP_SECRET=
 
@@ -96,6 +99,7 @@ export SSH_HOSTNAME=example.com
 export SSH_USERNAME=user
 export SSH_KNOWN_HOSTS_FILE=/path/to/known_hosts
 export SSH_PRIVATE_KEY_FILE=/path/to/private/key
+export SSH_PRIVATE_KEY_PASSPHRASE_FILE=/path/to/passphrase
 export SLACK_APP_SECRET=00000000000000000000000000000000
 export SLACK_ACTION_0_NAME=beef
 export SLACK_ACTION_0_ATTACHMENT_TEXT='Beef is chosen for dinner'
