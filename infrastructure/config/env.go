@@ -134,7 +134,7 @@ func Get() (Environment, error) {
 	}
 
 	if err != nil {
-		return env, fmt.Errorf("faile to parse private key %q: %w", sshPrivateKeyPath, err)
+		return env, fmt.Errorf("failed to parse private key %q: %w", sshPrivateKeyPath, err)
 	}
 
 	if env.SSH.Port == "" {
