@@ -8,7 +8,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/sirupsen/logrus v1.9.3
 	github.com/slack-go/slack v0.12.2
-	golang.org/x/crypto v0.11.0
+	golang.org/x/crypto v0.12.0
 	golang.org/x/sync v0.3.0
 )
 
@@ -33,7 +33,7 @@ require (
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	golang.org/x/arch v0.3.0 // indirect
 	golang.org/x/net v0.10.0 // indirect
-	golang.org/x/text v0.11.0 // indirect
+	golang.org/x/text v0.12.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
