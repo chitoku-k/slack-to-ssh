@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"strings"
 
 	"github.com/chitoku-k/slack-to-ssh/service"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -115,7 +115,7 @@ func Get() (Environment, error) {
 			knownHosts = rest
 		}
 	} else {
-		logrus.Warnln("SSH host key verification is disabled. Consider configuring SSH_KNOWN_HOSTS_FILE.")
+		slog.Warn("SSH host key verification is disabled. Consider configuring SSH_KNOWN_HOSTS_FILE.")
 	}
 
 	sshPrivateKey, err := os.ReadFile(sshPrivateKeyPath)
