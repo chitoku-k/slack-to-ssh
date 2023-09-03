@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log/slog"
 	"os"
 	"os/signal"
 
@@ -9,7 +10,6 @@ import (
 	"github.com/chitoku-k/slack-to-ssh/infrastructure/client"
 	"github.com/chitoku-k/slack-to-ssh/infrastructure/config"
 	"github.com/chitoku-k/slack-to-ssh/service"
-	"github.com/sirupsen/logrus"
 )
 
 var signals = []os.Signal{os.Interrupt}
@@ -20,12 +20,14 @@ func main() {
 
 	env, err := config.Get()
 	if err != nil {
-		logrus.Fatalf("Failed to initialize config: %v", err)
+		slog.Error("Failed to initialize config", slog.Any("err", err))
+		os.Exit(1)
 	}
 
 	shellActionExecutor, err := client.NewShellActionExecutor(env.SlackActions, env.SSH.HostName, env.SSH.Port, env.SSH.Username, env.SSH.KnownHosts, env.SSH.PrivateKey)
 	if err != nil {
-		logrus.Fatalf("Failed to initialize ssh config: %v", err)
+		slog.Error("Failed to initialize ssh config", slog.Any("err", err))
+		os.Exit(1)
 	}
 
 	action := service.NewActionService(shellActionExecutor)
@@ -35,6 +37,7 @@ func main() {
 	engine := server.NewEngine(env.Port, env.TLSCert, env.TLSKey, env.SlackAppSecret, action, interaction)
 	err = engine.Start(ctx)
 	if err != nil {
-		logrus.Fatalf("Failed to start web server: %v", err)
+		slog.Error("Failed to start web server", slog.Any("err", err))
+		os.Exit(1)
 	}
 }
