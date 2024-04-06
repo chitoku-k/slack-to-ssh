@@ -8,7 +8,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/slack-go/slack v0.12.5
 	golang.org/x/crypto v0.21.0
-	golang.org/x/sync v0.6.0
+	golang.org/x/sync v0.7.0
 	golang.org/x/sys v0.18.0
 )
 
