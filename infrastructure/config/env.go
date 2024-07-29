@@ -128,13 +128,16 @@ func Get() (Environment, error) {
 		if err != nil {
 			return env, fmt.Errorf("failed to read passphrase %q: %w", sshPrivateKeyPassphrasePath, err)
 		}
+
 		env.SSH.PrivateKey, err = ssh.ParsePrivateKeyWithPassphrase(sshPrivateKey, sshPrivateKeyPassphrase)
+		if err != nil {
+			return env, fmt.Errorf("failed to parse private key %q: %w", sshPrivateKeyPath, err)
+		}
 	} else {
 		env.SSH.PrivateKey, err = ssh.ParsePrivateKey(sshPrivateKey)
-	}
-
-	if err != nil {
-		return env, fmt.Errorf("failed to parse private key %q: %w", sshPrivateKeyPath, err)
+		if err != nil {
+			return env, fmt.Errorf("failed to parse private key %q: %w", sshPrivateKeyPath, err)
+		}
 	}
 
 	if env.SSH.Port == "" {

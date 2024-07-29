@@ -22,7 +22,12 @@ func (e *engine) HandleSlackEvent(ctx context.Context, c *gin.Context) {
 	}
 
 	var builder strings.Builder
-	io.Copy(&builder, io.TeeReader(c.Request.Body, &verifier))
+	_, err = io.Copy(&builder, io.TeeReader(c.Request.Body, &verifier))
+	if err != nil {
+		c.Status(http.StatusBadRequest)
+		c.Error(fmt.Errorf("failed to read body: %w", err))
+		return
+	}
 
 	err = verifier.Ensure()
 	if err != nil {
