@@ -6,3 +6,4 @@ slack-to-ssh
 .git
 .github
 .gitignore
+.golangci.yaml
