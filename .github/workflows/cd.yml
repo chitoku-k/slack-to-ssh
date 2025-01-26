@@ -61,4 +61,4 @@ jobs:
           kubectl config use-context k8s.chitoku.jp
       - name: Update image
         run: |
-          kubectl set image deployment/slack-to-ssh api=ghcr.io/chitoku-k/slack-to-ssh:${{ github.ref_name }}
+          kubectl set image --field-manager=github-actions deployment/slack-to-ssh api=ghcr.io/chitoku-k/slack-to-ssh:${{ github.ref_name }}
