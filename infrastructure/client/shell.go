@@ -75,13 +75,17 @@ func (sae *shellActionExecutor) Do(ctx context.Context, name string) ([]byte, er
 	}
 
 	client := ssh.NewClient(c, chans, reqs)
-	defer client.Close()
+	defer func() {
+		_ = client.Close()
+	}()
 
 	session, err := client.NewSession()
 	if err != nil {
 		return nil, fmt.Errorf("failed to establish a remote session: %w", err)
 	}
-	defer session.Close()
+	defer func() {
+		_ = session.Close()
+	}()
 
 	output, err := session.CombinedOutput(action.Command)
 	if err != nil {
