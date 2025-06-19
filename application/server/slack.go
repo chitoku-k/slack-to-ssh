@@ -3,8 +3,8 @@ package server
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strings"
@@ -17,7 +17,7 @@ func (e *engine) HandleSlackEvent(ctx context.Context, c *gin.Context) {
 	verifier, err := slack.NewSecretsVerifier(c.Request.Header, e.SlackAppSecret)
 	if err != nil {
 		c.Status(http.StatusUnauthorized)
-		c.Error(fmt.Errorf("failed to verify secret: %w", err))
+		slog.Error("Failed to verify secret", slog.Any("err", err))
 		return
 	}
 
@@ -25,21 +25,21 @@ func (e *engine) HandleSlackEvent(ctx context.Context, c *gin.Context) {
 	_, err = io.Copy(&builder, io.TeeReader(c.Request.Body, &verifier))
 	if err != nil {
 		c.Status(http.StatusBadRequest)
-		c.Error(fmt.Errorf("failed to read body: %w", err))
+		slog.Error("Failed to read body", slog.Any("err", err))
 		return
 	}
 
 	err = verifier.Ensure()
 	if err != nil {
 		c.Status(http.StatusUnauthorized)
-		c.Error(fmt.Errorf("failed to validate request: %w", err))
+		slog.Error("Failed to validate request", slog.Any("err", err))
 		return
 	}
 
 	values, err := url.ParseQuery(builder.String())
 	if err != nil {
 		c.Status(http.StatusBadRequest)
-		c.Error(fmt.Errorf("failed to parse request body: %w", err))
+		slog.Error("Failed to parse request body", slog.Any("err", err))
 		return
 	}
 
@@ -47,7 +47,7 @@ func (e *engine) HandleSlackEvent(ctx context.Context, c *gin.Context) {
 	err = json.Unmarshal([]byte(values.Get("payload")), &interaction)
 	if err != nil {
 		c.Status(http.StatusBadRequest)
-		c.Error(fmt.Errorf("failed to parse interaction: %w", err))
+		slog.Error("Failed to parse interaction", slog.Any("err", err))
 		return
 	}
 
@@ -56,22 +56,22 @@ func (e *engine) HandleSlackEvent(ctx context.Context, c *gin.Context) {
 			result, err := e.ActionService.Execute(ctx, action.Value)
 			if err != nil {
 				if result != nil {
-					c.Error(fmt.Errorf("failed to execute command: %w", err))
+					slog.Error("Failed to execute command", slog.Any("err", err))
 
 					err = e.InteractionService.Fail(ctx, *action, interaction, result, err)
 					if err != nil {
-						c.Error(fmt.Errorf("failed to respond to interaction: %w", err))
+						slog.Error("Failed to respond to interaction", slog.Any("err", err))
 					}
 					return
 				}
 
-				c.Error(fmt.Errorf("failed to execute action: %w", err))
+				slog.Error("Failed to execute action", slog.Any("err", err))
 				return
 			}
 
 			err = e.InteractionService.Respond(ctx, *action, interaction)
 			if err != nil {
-				c.Error(fmt.Errorf("failed to respond to interaction: %w", err))
+				slog.Error("Failed to respond to interaction", slog.Any("err", err))
 			}
 		}
 	}()

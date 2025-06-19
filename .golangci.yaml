@@ -2,8 +2,3 @@ version: "2"
 run:
   allow-parallel-runners: true
   allow-serial-runners: true
-linters:
-  settings:
-    errcheck:
-      exclude-functions:
-        - (*github.com/gin-gonic/gin.Context).Error
